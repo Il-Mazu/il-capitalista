@@ -46,6 +46,10 @@ class DiscogsClient:
                     return max(0.0, float(retry_after))
                 except ValueError:
                     pass
+            # Marketplace endpoints sometimes omit Retry-After. A full minute
+            # is a conservative reset window and avoids wasting all retries.
+            if response.status_code == 429:
+                return 60.0
         return min(30.0, 1.0 * (2 ** (attempt - 1)))
 
     def get_price_suggestions(self, release_id: str) -> dict[str, dict[str, Any]]:

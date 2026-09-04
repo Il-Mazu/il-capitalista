@@ -96,7 +96,7 @@ Una riga senza suggerimento, con `media_condition` non valida, `release_id` non 
 
 Le richieste sono sequenziali. Il client usa il token personale, un `User-Agent`, timeout, massimo cinque tentativi con exponential backoff per timeout/rete, HTTP 429 e 5xx, e rispetta `Retry-After` e `X-Discogs-Ratelimit-Remaining` quando presenti. Una release duplicata comporta una sola richiesta e la risposta viene riusata.
 
-L'API può restituire un oggetto vuoto o non avere un valore per una condizione; in questi casi controlla il report e il prezzo non cambia. Discogs può anche cambiare rate limit, disponibilità o suggerimenti: riesegui con `--refresh-cache` solo quando desideri dati nuovi.
+L'API può restituire un oggetto vuoto o non avere un valore per una condizione; in questi casi controlla il report e il prezzo non cambia. Discogs può anche cambiare rate limit, disponibilità o suggerimenti: riesegui con `--refresh-cache` solo quando desideri dati nuovi. Per un HTTP 429 senza `Retry-After`, il programma attende prudentemente 60 secondi prima di riprovare.
 
 ## Sviluppo
 

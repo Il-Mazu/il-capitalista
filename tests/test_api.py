@@ -41,6 +41,14 @@ def test_retries_429_using_retry_after():
     assert session.headers["Authorization"] == "Discogs token=secret"
 
 
+def test_retries_429_without_header_after_a_conservative_minute():
+    waits = []
+    session = FakeSession([FakeResponse(429), FakeResponse(200, {})])
+    client = DiscogsClient("secret", session=session, sleeper=waits.append)
+    assert client.get_price_suggestions("1") == {}
+    assert waits == [60.0]
+
+
 def test_retries_500_then_fails_with_bounded_attempts():
     waits = []
     client = DiscogsClient("secret", session=FakeSession([FakeResponse(500), FakeResponse(500), FakeResponse(500)]), max_attempts=3, sleeper=waits.append)
