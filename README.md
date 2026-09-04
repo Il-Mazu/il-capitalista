@@ -42,7 +42,7 @@ Inserisci il Personal Access Token Discogs nel file `.env`:
 DISCOGS_TOKEN=...
 ```
 
-Il token non viene mai stampato, e `.env` è escluso da Git. L'endpoint dei suggerimenti richiede un account con impostazioni venditore configurate; i prezzi ricevuti sono nella valuta di vendita dell'account Discogs.
+Il token non viene mai stampato, e `.env` è escluso da Git. L'endpoint dei suggerimenti richiede un account con impostazioni venditore configurate; i prezzi ricevuti sono nella valuta di vendita dell'account Discogs. Il riferimento ufficiale è la [documentazione Marketplace Price Suggestions](https://www.discogs.com/developers/#page:marketplace,header:marketplace-price-suggestions).
 
 ## Utilizzo
 

@@ -60,6 +60,7 @@ class PriceEngine:
 
     def _suggestions(self, release_id: str) -> ApiResponse:
         if release_id in self.memory:
+            self.stats.cache_hits += 1
             return self.memory[release_id]
         if release_id in self.memory_errors:
             raise self.memory_errors[release_id]

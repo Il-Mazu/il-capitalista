@@ -48,6 +48,7 @@ def test_duplicate_release_makes_one_fetch(read, tmp_path):
     assert calls == ["123"]
     assert [item.row["price"] for item in outcomes] == ["12.00", "12.00"]
     assert subject.stats.unique_api_requests == 1
+    assert subject.stats.cache_hits == 1
 
 
 def test_invalid_condition_and_release_id_are_not_fetched(read, tmp_path):
