@@ -18,7 +18,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 from discogs_auto_pricer.api import DiscogsApiError, DiscogsClient  # noqa: E402
 from discogs_auto_pricer.cache import PriceCache  # noqa: E402
 from discogs_auto_pricer.csv_handler import CsvValidationError, read_inventory, write_inventory, write_report  # noqa: E402
-from discogs_auto_pricer.pricing import PriceEngine, report_row, valid_release_id, VALID_CONDITIONS  # noqa: E402
+from discogs_auto_pricer.pricing import PriceEngine, canonical_condition, report_row, valid_release_id  # noqa: E402
 
 
 def percent(value: str) -> Decimal:
@@ -78,7 +78,7 @@ def main() -> int:
     if args.dry_run:
         candidate = next(
             (row[release_column].strip() for row in inventory.rows
-             if valid_release_id(row[release_column]) and row[condition_column].strip() in VALID_CONDITIONS),
+             if valid_release_id(row[release_column]) and canonical_condition(row[condition_column]) is not None),
             None,
         )
         if candidate:

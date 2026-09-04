@@ -35,6 +35,12 @@ def test_updates_empty_price_and_matches_near_mint(read, tmp_path):
     assert result.result == "UPDATED"
 
 
+def test_discogs_export_enum_matches_api_display_condition(read, tmp_path):
+    subject = engine(read, tmp_path, [row(condition="VERY_GOOD_PLUS")], lambda _: suggestions(**{"Very Good Plus (VG+)": 13}))
+    result = subject.process()[0]
+    assert (result.result, result.row["price"]) == ("UPDATED", "13.00")
+
+
 def test_no_suggestion_leaves_price(read, tmp_path):
     subject = engine(read, tmp_path, [row()], lambda _: {})
     result = subject.process()[0]

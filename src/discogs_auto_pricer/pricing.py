@@ -14,6 +14,19 @@ VALID_CONDITIONS = {
     "Mint (M)", "Near Mint (NM or M-)", "Very Good Plus (VG+)", "Very Good (VG)",
     "Good Plus (G+)", "Good (G)", "Fair (F)", "Poor (P)",
 }
+# Marketplace inventory exports currently use enum values such as
+# ``VERY_GOOD_PLUS``; the price-suggestions endpoint uses display labels.
+CONDITION_ALIASES = {
+    **{condition: condition for condition in VALID_CONDITIONS},
+    "MINT": "Mint (M)",
+    "NEAR_MINT": "Near Mint (NM or M-)",
+    "VERY_GOOD_PLUS": "Very Good Plus (VG+)",
+    "VERY_GOOD": "Very Good (VG)",
+    "GOOD_PLUS": "Good Plus (G+)",
+    "GOOD": "Good (G)",
+    "FAIR": "Fair (F)",
+    "POOR": "Poor (P)",
+}
 RELEASE_ID_PATTERN = re.compile(r"^[1-9][0-9]*$")
 CENT = Decimal("0.01")
 
@@ -37,6 +50,11 @@ def parse_money(value: str) -> Decimal | None:
 
 def valid_release_id(value: str) -> bool:
     return bool(RELEASE_ID_PATTERN.fullmatch(value.strip()))
+
+
+def canonical_condition(value: str) -> str | None:
+    """Translate a supported Discogs export enum to the API response key."""
+    return CONDITION_ALIASES.get(value.strip())
 
 
 class PriceEngine:
@@ -114,11 +132,11 @@ class PriceEngine:
                 self.stats.skipped_status += 1
             else:
                 release_id = row[release_column].strip()
-                condition = row[condition_column].strip()
+                condition = canonical_condition(row[condition_column])
                 if not valid_release_id(release_id):
                     outcome = RowOutcome(row, "INVALID_RELEASE_ID", "release_id mancante o non valido.", old_price=old_price, new_price=old_price, old_value=old_value)
                     self.stats.invalid_release_id += 1
-                elif condition not in VALID_CONDITIONS:
+                elif condition is None:
                     outcome = RowOutcome(row, "INVALID_CONDITION", "media_condition non riconosciuta.", old_price=old_price, new_price=old_price, old_value=old_value)
                     self.stats.invalid_condition += 1
                 else:

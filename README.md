@@ -72,7 +72,7 @@ La cache persistente è `.cache/price_suggestions.json`; evita richieste duplica
 
 ## Output
 
-Il programma conserva tutte le colonne, l'ordine delle colonne, i commenti quotati/multilinea e i valori non legati al prezzo.
+Il programma conserva tutte le colonne, l'ordine delle colonne, i commenti quotati/multilinea e i valori non legati al prezzo. Riconosce sia le etichette leggibili delle condizioni sia gli enum che l'export Marketplace usa attualmente (per esempio `VERY_GOOD_PLUS`), traducendoli solo per cercare la chiave corrispondente nella risposta API.
 
 - `output/inventory_repriced.csv`: file **consigliato per l'importazione**. Se l'input ha `status`, contiene solo righe `For Sale`; le altre sono escluse e segnalate nel report.
 - `output/inventory_repriced_full.csv`: copia completa con tutte le righe. Le righe con stato diverso da `For Sale` non vengono rivalutate.
