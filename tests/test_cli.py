@@ -23,6 +23,7 @@ def test_cli_generates_safe_full_and_report_with_mocked_api(monkeypatch, invento
 
     monkeypatch.chdir(tmp_path)
     monkeypatch.setenv("DISCOGS_TOKEN", "test-token")
+    monkeypatch.setattr("builtins.input", lambda _: "n")
     monkeypatch.setattr(discogs_pricer, "DiscogsClient", MockClient)
     monkeypatch.setattr(sys, "argv", ["discogs_pricer.py", str(source)])
     assert discogs_pricer.main() == 0

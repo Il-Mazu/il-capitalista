@@ -72,6 +72,12 @@ def test_status_not_for_sale_is_skipped(read, tmp_path):
     assert result.row["price"] == "40.00"
 
 
+def test_draft_can_be_priced_only_when_explicitly_enabled(read, tmp_path):
+    subject = engine(read, tmp_path, [row(status="DRAFT")], lambda _: suggestions(**{"Very Good Plus (VG+)": 15}), price_drafts=True)
+    result = subject.process()[0]
+    assert (result.result, result.row["price"]) == ("UPDATED", "15.00")
+
+
 def test_money_rounding_and_limits(read, tmp_path):
     assert format_money(money("15.678")) == "15.68"
     subject = engine(read, tmp_path, [row(price="10.00")], lambda _: suggestions(**{"Very Good Plus (VG+)": "17.00"}), max_increase_percent=Decimal("50"))

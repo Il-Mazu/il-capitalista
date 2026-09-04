@@ -18,7 +18,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 from discogs_auto_pricer.api import DiscogsApiError, DiscogsClient  # noqa: E402
 from discogs_auto_pricer.cache import PriceCache  # noqa: E402
 from discogs_auto_pricer.csv_handler import CsvValidationError, read_inventory, write_inventory, write_report  # noqa: E402
-from discogs_auto_pricer.pricing import PriceEngine, canonical_condition, report_row, valid_release_id  # noqa: E402
+from discogs_auto_pricer.pricing import PriceEngine, canonical_condition, is_draft, is_for_sale, report_row, valid_release_id  # noqa: E402
 
 
 def percent(value: str) -> Decimal:
@@ -40,6 +40,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dry-run", action="store_true", help="Valida e prova una richiesta, senza produrre CSV")
     parser.add_argument("--no-cache", action="store_true", help="Ignora e non salva la cache persistente")
     parser.add_argument("--refresh-cache", action="store_true", help="Ignora la cache esistente e la aggiorna")
+    parser.add_argument("--include-drafts", action="store_true", help="Ricalcola i Draft senza chiedere conferma; restano esclusi dal CSV importabile sicuro")
     parser.add_argument("--max-increase-percent", type=percent, help="Non applica aumenti oltre questa percentuale")
     parser.add_argument("--max-decrease-percent", type=percent, help="Non applica diminuzioni oltre questa percentuale")
     return parser.parse_args()
@@ -58,6 +59,31 @@ def show_preview(path: Path, rows: int, unique: int) -> None:
     print(f"File: {path}\nRighe trovate: {rows}\nRelease uniche: {unique}\nValuta prezzi: determinata dalle API Discogs\n")
 
 
+def confirm_draft_pricing(inventory: object, already_enabled: bool) -> bool:
+    """Ask before repricing drafts; an affirmative choice never changes status."""
+    status_column = inventory.columns.get("status")
+    if status_column is None:
+        return False
+    draft_count = sum(is_draft(row[status_column]) for row in inventory.rows)
+    if not draft_count:
+        return False
+    if already_enabled:
+        print(f"Draft rilevati: {draft_count}. Verranno ricalcolati; resteranno esclusi dal CSV sicuro.")
+        return True
+    try:
+        answer = input(
+            f"Rilevati {draft_count} annunci Draft. Vuoi ricalcolarne i prezzi nel CSV completo? [s/N] "
+        ).strip().casefold()
+    except EOFError:
+        answer = ""
+    enabled = answer in {"s", "si", "sì", "y", "yes"}
+    if enabled:
+        print("I Draft verranno ricalcolati, ma non inclusi nel CSV sicuro per l'importazione.")
+    else:
+        print("I Draft saranno lasciati invariati.")
+    return enabled
+
+
 def main() -> int:
     args = parse_args()
     try:
@@ -73,6 +99,8 @@ def main() -> int:
     token = token_or_error()
     if token is None:
         return 2
+
+    price_drafts = confirm_draft_pricing(inventory, args.include_drafts)
 
     client = DiscogsClient(token)
     if args.dry_run:
@@ -98,6 +126,7 @@ def main() -> int:
         inventory, client.get_price_suggestions, cache,
         max_increase_percent=args.max_increase_percent,
         max_decrease_percent=args.max_decrease_percent,
+        price_drafts=price_drafts,
     )
     last_printed = 0
 
@@ -116,7 +145,7 @@ def main() -> int:
     status_column = inventory.columns.get("status")
     safe_rows = [
         outcome.row for outcome in outcomes
-        if status_column is None or outcome.row[status_column].strip().casefold() == "for sale"
+        if status_column is None or is_for_sale(outcome.row[status_column])
     ]
     write_inventory(output, inventory, safe_rows)
     write_inventory(full_output, inventory, full_rows)

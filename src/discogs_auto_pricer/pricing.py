@@ -57,6 +57,19 @@ def canonical_condition(value: str) -> str | None:
     return CONDITION_ALIASES.get(value.strip())
 
 
+def canonical_status(value: str) -> str:
+    """Normalize Marketplace status labels and export enums."""
+    return value.strip().upper().replace(" ", "_")
+
+
+def is_for_sale(value: str) -> bool:
+    return canonical_status(value) == "FOR_SALE"
+
+
+def is_draft(value: str) -> bool:
+    return canonical_status(value) == "DRAFT"
+
+
 class PriceEngine:
     def __init__(
         self,
@@ -66,12 +79,14 @@ class PriceEngine:
         *,
         max_increase_percent: Decimal | None = None,
         max_decrease_percent: Decimal | None = None,
+        price_drafts: bool = False,
     ) -> None:
         self.inventory = inventory
         self.fetcher = fetcher
         self.cache = cache
         self.max_increase_percent = max_increase_percent
         self.max_decrease_percent = max_decrease_percent
+        self.price_drafts = price_drafts
         self.memory: dict[str, ApiResponse] = {}
         self.memory_errors: dict[str, DiscogsApiError] = {}
         self.stats = RunStats(rows_read=len(inventory.rows))
@@ -106,7 +121,7 @@ class PriceEngine:
 
     def _safe_status(self, row: dict[str, str]) -> bool:
         column = self.inventory.columns.get("status")
-        return column is None or row[column].strip().casefold() == "for sale"
+        return column is None or is_for_sale(row[column]) or (self.price_drafts and is_draft(row[column]))
 
     def _exceeds_limits(self, old: Decimal | None, new: Decimal) -> str | None:
         if old is None or old <= 0:

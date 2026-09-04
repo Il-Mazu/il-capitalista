@@ -70,6 +70,8 @@ python discogs_pricer.py inventory.csv --max-increase-percent 50 --max-decrease-
 
 La cache persistente è `.cache/price_suggestions.json`; evita richieste duplicate anche fra esecuzioni. Per ignorarla una volta, usa `--no-cache`; per rifarla usa `--refresh-cache`.
 
+Se l'input contiene annunci `Draft`, il programma chiede se ricalcolarne i prezzi nel CSV completo e nel report. Rispondendo sì non cambia mai lo stato, e i Draft restano esclusi da `inventory_repriced.csv`. Per script non interattivi usa `--include-drafts`.
+
 ## Output
 
 Il programma conserva tutte le colonne, l'ordine delle colonne, i commenti quotati/multilinea e i valori non legati al prezzo. Riconosce sia le etichette leggibili delle condizioni sia gli enum che l'export Marketplace usa attualmente (per esempio `VERY_GOOD_PLUS`), traducendoli solo per cercare la chiave corrispondente nella risposta API.
