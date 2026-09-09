@@ -1,4 +1,33 @@
-# Discogs Auto Pricer
+![Discogs Auto Pricer — from inventory CSV to reviewable price suggestions](assets/banner.svg)
+
+# Less manual repricing. A clear change report.
+
+**Discogs Auto Pricer** is a local Python tool for sellers who want to update an inventory export using the official Discogs price suggestions. It matches suggestions to **media condition**, keeps the original CSV intact and produces a separate report for review. It does not update live listings automatically.
+
+**Python 3.11+ · Discogs API · CSV · Persistent cache**
+
+```mermaid
+flowchart LR
+    CSV[Inventory CSV] --> Tool[Auto Pricer]
+    API[Discogs suggestions] --> Tool
+    Tool --> Export[Repriced CSV]
+    Tool --> Report[Change report]
+    Export --> Review[Your review before import]
+    Report --> Review
+```
+
+## Start here
+
+1. Install the dependencies and set `DISCOGS_TOKEN` in your local `.env` (instructions below).
+2. Check your export with `python discogs_pricer.py inventory.csv --dry-run`.
+3. Generate output with `python discogs_pricer.py inventory.csv`.
+4. Review `output/report.csv` and retain your original export before importing changes.
+
+The dry run makes one API request and writes no CSV output. Missing suggestions or invalid rows keep their original price. Optional percentage limits let you skip unusually large changes.
+
+## Guida completa · Italiano
+
+### Funzionamento
 
 Strumento locale che aggiorna il campo `price` di un CSV Marketplace Discogs usando esclusivamente i suggerimenti dell'API ufficiale Discogs, scelti in base a `media_condition` (mai `sleeve_condition`). Non modifica il CSV originale né invia modifiche dirette a Discogs.
 
@@ -6,9 +35,11 @@ Strumento locale che aggiorna il campo `price` di un CSV Marketplace Discogs usa
 
 ## Installazione
 
+Richiede Python **3.11+**.
+
 ```bash
-git clone <URL-del-repository>
-cd discogs-auto-pricer
+git clone https://github.com/Il-Mazu/il-capitalista.git
+cd il-capitalista
 python -m venv .venv
 ```
 

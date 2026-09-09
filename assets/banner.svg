@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="title desc">
+<title id="title">Discogs Auto Pricer</title><desc id="desc">From inventory CSV to reviewable price suggestions.</desc>
+<defs><pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="#202d35" stroke-width="1"/></pattern></defs>
+<rect width="1200" height="300" rx="16" fill="#0d141b"/><rect width="1200" height="300" rx="16" fill="url(#grid)"/>
+<path d="M0 42H1200" stroke="#35434e"/><circle cx="25" cy="22" r="5" fill="#ff8179"/><circle cx="45" cy="22" r="5" fill="#e5c07b"/><circle cx="65" cy="22" r="5" fill="#9de6b3"/>
+<g font-family="Consolas,monospace"><text x="92" y="27" font-size="13" fill="#a2b3c2">MAZU / 03 / PYTHON TOOL</text>
+<text x="52" y="105" font-size="16" fill="#9de6b3">&gt; open project</text><text x="50" y="173" font-size="49" font-weight="bold" fill="#f0f5f8">Discogs Auto Pricer</text>
+<text x="52" y="218" font-size="20" fill="#a2b3c2">From inventory CSV to reviewable price suggestions.</text><path d="M52 252H180" stroke="#9de6b3" stroke-width="4"/></g>
+</svg>
