@@ -1,8 +1,8 @@
-![Discogs Auto Pricer — from inventory CSV to reviewable price suggestions](assets/banner.svg)
+![Discogs Auto Pricer — A script for updating Discogs prices.](assets/banner-basic.svg)
 
-# Less manual repricing. A clear change report.
+# Discogs Auto Pricer
 
-**Discogs Auto Pricer** is a local Python tool for sellers who want to update an inventory export using the official Discogs price suggestions. It matches suggestions to **media condition**, keeps the original CSV intact and produces a separate report for review. It does not update live listings automatically.
+A Python script that updates prices in a Discogs inventory CSV using the API suggestions for each record's media condition. It saves a new CSV and a report so you can check the changes. Your original file and live listings stay as they are.
 
 **Python 3.11+ · Discogs API · CSV · Persistent cache**
 
