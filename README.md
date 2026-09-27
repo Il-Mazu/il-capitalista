@@ -1,136 +1,66 @@
-![Discogs Auto Pricer — A script for updating Discogs prices.](assets/banner-basic.svg)
+# il-capitalista
 
-# Discogs Auto Pricer
+A Python script for repricing a Discogs inventory CSV. It looks up price suggestions for each record's media condition and writes a new CSV plus a report. It does not change your live listings.
 
-A Python script that updates prices in a Discogs inventory CSV using the API suggestions for each record's media condition. It saves a new CSV and a report so you can check the changes. Your original file and live listings stay as they are.
+[Guida in italiano](docs/README.it.md)
 
-**Python 3.11+ · Discogs API · CSV · Persistent cache**
+## Setup
 
-```mermaid
-flowchart LR
-    CSV[Inventory CSV] --> Tool[Auto Pricer]
-    API[Discogs suggestions] --> Tool
-    Tool --> Export[Repriced CSV]
-    Tool --> Report[Change report]
-    Export --> Review[Your review before import]
-    Report --> Review
-```
+Requires Python 3.11+ and a Discogs personal access token with access to price suggestions.
 
-## Start here
-
-1. Install the dependencies and set `DISCOGS_TOKEN` in your local `.env` (instructions below).
-2. Check your export with `python discogs_pricer.py inventory.csv --dry-run`.
-3. Generate output with `python discogs_pricer.py inventory.csv`.
-4. Review `output/report.csv` and retain your original export before importing changes.
-
-The dry run makes one API request and writes no CSV output. Missing suggestions or invalid rows keep their original price. Optional percentage limits let you skip unusually large changes.
-
-## Guida completa · Italiano
-
-### Funzionamento
-
-Strumento locale che aggiorna il campo `price` di un CSV Marketplace Discogs usando esclusivamente i suggerimenti dell'API ufficiale Discogs, scelti in base a `media_condition` (mai `sleeve_condition`). Non modifica il CSV originale né invia modifiche dirette a Discogs.
-
-> **Prima di ogni importazione massiva, controlla attentamente `output/report.csv` e conserva il backup del CSV originale.** I suggerimenti Discogs possono non essere appropriati per ogni copia o mercato.
-
-## Installazione
-
-Richiede Python **3.11+**.
-
-```bash
+```sh
 git clone https://github.com/Il-Mazu/il-capitalista.git
 cd il-capitalista
 python -m venv .venv
 ```
 
-Windows:
+Activate the environment with `source .venv/bin/activate` on Linux/macOS or `.venv\Scripts\activate` on Windows, then:
 
-```bash
-.venv\Scripts\activate
-```
-
-macOS/Linux:
-
-```bash
-source .venv/bin/activate
-```
-
-Poi:
-
-```bash
+```sh
 pip install -r requirements.txt
-```
-
-## Configurazione
-
-```bash
 cp .env.example .env
 ```
 
-Inserisci il Personal Access Token Discogs nel file `.env`:
+Set `DISCOGS_TOKEN` in `.env`. On Windows, you can copy `.env.example` through File Explorer. The token file is ignored by Git.
 
-```text
-DISCOGS_TOKEN=...
-```
+## Use
 
-Il token non viene mai stampato, e `.env` è escluso da Git. L'endpoint dei suggerimenti richiede un account con impostazioni venditore configurate; i prezzi ricevuti sono nella valuta di vendita dell'account Discogs. Il riferimento ufficiale è la [documentazione Marketplace Price Suggestions](https://www.discogs.com/developers/#page:marketplace,header:marketplace-price-suggestions).
+First check the CSV and make one test API request:
 
-## Utilizzo
-
-```bash
-python discogs_pricer.py inventory.csv
-```
-
-Oppure scegli il file importabile:
-
-```bash
-python discogs_pricer.py inventory.csv --output output/mio_inventory.csv
-```
-
-Verifica CSV, token e una singola richiesta API senza scrivere output:
-
-```bash
+```sh
 python discogs_pricer.py inventory.csv --dry-run
 ```
 
-Opzioni di sicurezza facoltative (non attive per default):
+Then generate the output:
 
-```bash
-python discogs_pricer.py inventory.csv --max-increase-percent 50 --max-decrease-percent 50
+```sh
+python discogs_pricer.py inventory.csv
 ```
 
-La cache persistente è `.cache/price_suggestions.json`; evita richieste duplicate anche fra esecuzioni. Per ignorarla una volta, usa `--no-cache`; per rifarla usa `--refresh-cache`.
+| File | Contents |
+| --- | --- |
+| `output/inventory_repriced.csv` | Rows ready to review for import; only `For Sale` rows when the input has a status column |
+| `output/inventory_repriced_full.csv` | All rows, including drafts |
+| `output/report.csv` | Old prices, suggestions, changes, and errors; do not import this file |
 
-Se l'input contiene annunci `Draft`, il programma chiede se ricalcolarne i prezzi nel CSV completo e nel report. Rispondendo sì non cambia mai lo stato, e i Draft restano esclusi da `inventory_repriced.csv`. Per script non interattivi usa `--include-drafts`.
+Keep the original export and review the report before importing. In Discogs, choose the option to **update existing listings**, not add new listings.
 
-## Output
+## Options
 
-Il programma conserva tutte le colonne, l'ordine delle colonne, i commenti quotati/multilinea e i valori non legati al prezzo. Riconosce sia le etichette leggibili delle condizioni sia gli enum che l'export Marketplace usa attualmente (per esempio `VERY_GOOD_PLUS`), traducendoli solo per cercare la chiave corrispondente nella risposta API.
+```sh
+python discogs_pricer.py inventory.csv --max-increase-percent 50 --max-decrease-percent 50
+python discogs_pricer.py inventory.csv --output output/repriced.csv
+python discogs_pricer.py inventory.csv --refresh-cache
+```
 
-- `output/inventory_repriced.csv`: file **consigliato per l'importazione**. Se l'input ha `status`, contiene solo righe `For Sale`; le altre sono escluse e segnalate nel report.
-- `output/inventory_repriced_full.csv`: copia completa con tutte le righe. Le righe con stato diverso da `For Sale` non vengono rivalutate.
-- `output/report.csv`: diagnostica separata, non importare su Discogs. Include prezzi vecchi/nuovi, differenze, valuta e risultato.
+Percentage limits skip changes above your threshold. `--no-cache` bypasses the persistent cache. `--include-drafts` prices draft rows without prompting, but they remain excluded from the importable CSV.
 
-Una riga senza suggerimento, con `media_condition` non valida, `release_id` non valido o errore API mantiene il suo prezzo originale. Ogni riga valida viene rivalutata anche se `price` era già compilato. I valori API sono formattati con due decimali e arrotondamento monetario `ROUND_HALF_UP`.
+Missing suggestions, invalid rows, and API errors keep the original price. Prices use media condition, not sleeve condition. Requests are sequential, cached by release, and retried with backoff for transient errors and rate limits.
 
-## Importazione Discogs
+See the [Italian guide](docs/README.it.md) for CSV handling, import instructions, cache behavior, and API limits.
 
-1. Fai sempre il backup del CSV originale.
-2. Apri l'Inventario Marketplace in Discogs.
-3. Scegli **Importa CSV / Bulk Upload**.
-4. Scegli la funzione per **AGGIORNARE/MODIFICARE annunci esistenti**.
-5. **Non scegliere “Aggiungi”**: potrebbe creare annunci nuovi.
-6. Carica `output/inventory_repriced.csv`.
-7. Controlla il risultato dell'importazione mostrato da Discogs.
+## Tests
 
-## API e limiti
-
-Le richieste sono sequenziali. Il client usa il token personale, un `User-Agent`, timeout, massimo cinque tentativi con exponential backoff per timeout/rete, HTTP 429 e 5xx, e rispetta `Retry-After` e `X-Discogs-Ratelimit-Remaining` quando presenti. Una release duplicata comporta una sola richiesta e la risposta viene riusata.
-
-L'API può restituire un oggetto vuoto o non avere un valore per una condizione; in questi casi controlla il report e il prezzo non cambia. Discogs può anche cambiare rate limit, disponibilità o suggerimenti: riesegui con `--refresh-cache` solo quando desideri dati nuovi. Per un HTTP 429 senza `Retry-After`, il programma attende prudentemente 60 secondi prima di riprovare.
-
-## Sviluppo
-
-```bash
+```sh
 pytest
 ```
